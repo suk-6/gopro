@@ -38,6 +38,5 @@ class App:
 
 
 if __name__ == "__main__":
-    # path = "/Volumes/T7/road-data/240601/chan"
-    path = "/Users/woosuk/Downloads/road-data"
+    path = osp.join("/", "Volumes", "T7", "road-data", "240601")
     app = App(path)

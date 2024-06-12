@@ -1,6 +1,7 @@
 import os
 import os.path as osp
 import json
+from tqdm import tqdm
 
 from parse import Parse
 
@@ -27,7 +28,7 @@ class App:
             "points": [],
         }
 
-        for video in self.videos:
+        for video in tqdm(self.videos, desc="Parsing videos", unit="video"):
             parse = Parse(video)
             result["points"].extend(parse.gpxData["points"])
             result["length"] += parse.calculateLength()
@@ -38,5 +39,5 @@ class App:
 
 
 if __name__ == "__main__":
-    path = osp.join("/", "Volumes", "T7", "road-data", "240601")
+    path = osp.join("/", "Volumes", "T7", "road-data")
     app = App(path)

@@ -10,14 +10,17 @@ class Parse:
         self.tmpPath = osp.join("/", "tmp")
         self.uuid = os.urandom(16).hex()
         self.videoPath = path
-        print(self.uuid, self.videoPath)
 
-        self.parse()
-        self.gpxData = self.getGPXData()
-        self.calibration()
+        try:
+            self.parse()
+            self.gpxData = self.getGPXData()
+            self.calibration()
+            self.lessPoints()
 
-        os.remove(osp.join(self.tmpPath, self.uuid + ".kml"))
-        os.remove(osp.join(self.tmpPath, self.uuid + ".gpx"))
+            os.remove(osp.join(self.tmpPath, self.uuid + ".kml"))
+            os.remove(osp.join(self.tmpPath, self.uuid + ".gpx"))
+        except Exception as e:
+            print(e, self.uuid, self.videoPath)
 
     def parse(self):
         try:
@@ -137,25 +140,30 @@ class Parse:
     def calibration(self):
         points = self.gpxData["points"]
         calibrated = []
-        skip = -1
 
         for point in range(len(points) - 1):
-            if skip == point:
-                continue
-
             lat1, lng1 = float(points[point]["lat"]), float(points[point]["lng"])
-            lat2, lng2 = float(points[point + 1]["lat"]), float(
-                points[point + 1]["lng"]
-            )
 
-            distanceDifference = self.haversine(lat1, lng1, lat2, lng2)
-
-            if distanceDifference > 0.0001:  # 1 meter
-                skip = point + 1
-                print(
-                    f"calibrate: {point}, {distanceDifference}, {points[point]['duration']}"
+            if len(calibrated) == 0:
+                lat2, lng2 = float(points[point + 1]["lat"]), float(
+                    points[point + 1]["lng"]
                 )
+            else:
+                lat2, lng2 = float(calibrated[-1]["lat"]), float(calibrated[-1]["lng"])
+
+            if self.haversine(lat1, lng1, lat2, lng2) > 0.1:
+                continue
 
             calibrated.append(points[point])
 
         self.gpxData["points"] = calibrated
+
+    def lessPoints(self):
+        points = self.gpxData["points"]
+        less = []
+
+        for point in range(len(points) - 1):
+            if point % 3 == 0:
+                less.append(points[point])
+
+        self.gpxData["points"] = less

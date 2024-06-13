@@ -10,6 +10,7 @@ class App:
     def __init__(self, path) -> None:
         self.path = path
         self.videos = self.getVideos()
+        self.boundaries = self.getBoundaries()
 
         self.saveJson()
 
@@ -20,6 +21,15 @@ class App:
                 if file.lower().endswith(".mp4"):
                     videos.append(osp.join(root, file))
         return videos
+
+    def getBoundaries(self):
+        boundaries = []
+        for file in os.listdir(osp.join(".", "boundary")):
+            if file.lower().endswith(".json"):
+                with open(osp.join(".", "boundary", file)) as f:
+                    boundaries.append(json.load(f))
+
+        return boundaries
 
     def saveJson(self):
         result = {
@@ -33,6 +43,9 @@ class App:
             result["points"].extend(parse.gpxData["points"])
             result["length"] += parse.calculateLength()
             result["duration"] += parse.gpxData["totalDuration"]
+
+        for boundary in self.boundaries:
+            result["points"].extend(boundary["coordinates"])
 
         with open("goprodata.json", "w") as f:
             json.dump(result, f)
